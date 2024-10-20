@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 50px; }
+        .container { max-width: 400px; margin: 0 auto; padding: 20px; border: 1px solid #ccc; }
+        input { margin: 10px 0; padding: 10px; width: 100%; }
+        .message { color: red; }
+        .success { color: green; }
+        button { margin: 10px 0; padding: 10px; width: 100%; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Login</h2>
+    
+    <!-- Login Form -->
+    <form id="login-form">
+        <label for="email">Email:</label>
+        <input type="text" id="email" name="email" required><br>
+        
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required><br>
+        
+        <input type="submit" value="Login">
+    </form>
+
+    <!-- Refresh Token Button -->
+    <button id="refresh-token-button">Refresh Token</button>
+
+    <!-- API Response Message -->
+    <div id="response-message" class="message"></div>
+
+    <!-- Access Token Display -->
+    <div id="access-token" class="success"></div>
+
+</div>
+
+<script>
+    document.getElementById('login-form').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
+        fetch('https://100.67.47.42:5003/auth/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email: email, password: password }),
+            credentials: 'include'
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok ' + response.statusText);
+            }
+            return response.json();
+        })
+        .then(data => {
+            const responseMessage = document.getElementById('response-message');
+            const accessTokenDisplay = document.getElementById('access-token');
+
+            if (data.access_token) {
+                responseMessage.textContent = 'Login successful!';
+                responseMessage.classList.remove('message');
+                responseMessage.classList.add('success');
+                accessTokenDisplay.textContent = 'Access Token: ' + data.access_token;
+                accessTokenDisplay.classList.remove('message');
+                accessTokenDisplay.classList.add('success');
+            } else {
+                responseMessage.textContent = 'Login failed!';
+                responseMessage.classList.add('message');
+                responseMessage.classList.remove('success');
+                accessTokenDisplay.textContent = '';
+            }
+        })
+        .catch(error => {
+            document.getElementById('response-message').textContent = 'Error: ' + error.message;
+            document.getElementById('response-message').classList.add('message');
+            document.getElementById('access-token').textContent = '';
+        });
+    });
+
+    // Refresh Token Functionality
+    document.getElementById('refresh-token-button').addEventListener('click', function() {
+        fetch('https://100.67.47.42:5003/auth/refresh', {
+            method: 'POST',
+            credentials: 'include'  // Include cookies in the request
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok ' + response.statusText);
+            }
+            return response.json();
+        })
+        .then(data => {
+            const accessTokenDisplay = document.getElementById('access-token');
+            if (data.access_token) {
+                accessTokenDisplay.textContent = 'New Access Token: ' + data.access_token;
+                accessTokenDisplay.classList.remove('message');
+                accessTokenDisplay.classList.add('success');
+            }
+        })
+        .catch(error => {
+            document.getElementById('response-message').textContent = 'Error: ' + error.message;
+            document.getElementById('response-message').classList.add('message');
+        });
+    });
+</script>
+
+</body>
+</html>
